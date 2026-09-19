@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import Link from "next/link";
+import Logo from "@/components/logo";
 import { loginAction, type AuthActionState } from "@/app/actions/auth";
 
 const initialState: AuthActionState = {};
@@ -14,8 +15,12 @@ export default function LoginPage() {
 
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-sm flex-col justify-center px-6 py-10">
-      <h1 className="mb-1 text-2xl font-bold text-neutral-900">BoxTrack</h1>
-      <p className="mb-8 text-sm text-neutral-500">
+      <Logo className="mb-10" />
+
+      <h1 className="mb-1 text-2xl font-bold text-foreground">
+        Bienvenido de nuevo
+      </h1>
+      <p className="mb-8 text-sm text-muted">
         Inicia sesión para ver tu progreso.
       </p>
 
@@ -23,7 +28,7 @@ export default function LoginPage() {
         <div>
           <label
             htmlFor="email"
-            className="mb-1 block text-sm font-medium text-neutral-700"
+            className="mb-1.5 block text-sm font-medium text-neutral-300"
           >
             Correo
           </label>
@@ -33,14 +38,14 @@ export default function LoginPage() {
             type="email"
             required
             autoComplete="email"
-            className="w-full rounded-lg border border-neutral-300 px-3 py-2.5 text-base text-neutral-900 focus:border-neutral-900 focus:outline-none"
+            className="w-full rounded-xl border border-border bg-surface px-3.5 py-3 text-base text-foreground outline-none transition-colors focus:border-accent"
           />
         </div>
 
         <div>
           <label
             htmlFor="password"
-            className="mb-1 block text-sm font-medium text-neutral-700"
+            className="mb-1.5 block text-sm font-medium text-neutral-300"
           >
             Contraseña
           </label>
@@ -50,12 +55,12 @@ export default function LoginPage() {
             type="password"
             required
             autoComplete="current-password"
-            className="w-full rounded-lg border border-neutral-300 px-3 py-2.5 text-base text-neutral-900 focus:border-neutral-900 focus:outline-none"
+            className="w-full rounded-xl border border-border bg-surface px-3.5 py-3 text-base text-foreground outline-none transition-colors focus:border-accent"
           />
         </div>
 
         {state?.error && (
-          <p className="text-sm text-red-600" role="alert">
+          <p className="text-sm text-red-400" role="alert">
             {state.error}
           </p>
         )}
@@ -63,18 +68,15 @@ export default function LoginPage() {
         <button
           type="submit"
           disabled={pending}
-          className="mt-2 rounded-lg bg-neutral-900 px-4 py-2.5 text-base font-semibold text-white disabled:opacity-50"
+          className="mt-2 rounded-xl bg-accent px-4 py-3.5 text-base font-bold text-accent-foreground transition-opacity active:opacity-80 disabled:opacity-50"
         >
           {pending ? "Ingresando…" : "Iniciar sesión"}
         </button>
       </form>
 
-      <p className="mt-6 text-center text-sm text-neutral-500">
+      <p className="mt-6 text-center text-sm text-muted">
         ¿No tienes cuenta?{" "}
-        <Link
-          href="/registro"
-          className="font-medium text-neutral-900 underline"
-        >
+        <Link href="/registro" className="font-semibold text-accent">
           Regístrate
         </Link>
       </p>

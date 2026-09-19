@@ -31,13 +31,16 @@ export default async function NuevoRmPage() {
 
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col px-6 py-8">
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-xl font-bold text-neutral-900">
+      <div className="mb-6 flex items-center gap-3">
+        <Link
+          href="/dashboard"
+          className="flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-surface text-lg text-foreground"
+        >
+          ←
+        </Link>
+        <h1 className="text-xl font-bold text-foreground">
           Registrar nuevo RM
         </h1>
-        <Link href="/dashboard" className="text-sm text-neutral-500 underline">
-          Volver
-        </Link>
       </div>
 
       <RmForm boxId={membresia.box_id} movimientos={movimientos ?? []} />

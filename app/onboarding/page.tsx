@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import Logo from "@/components/logo";
 import {
   joinBoxAction,
   logoutAction,
@@ -17,10 +18,12 @@ export default function OnboardingPage() {
 
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-sm flex-col justify-center px-6 py-10">
-      <h1 className="mb-1 text-2xl font-bold text-neutral-900">
+      <Logo className="mb-10" />
+
+      <h1 className="mb-1 text-2xl font-bold text-foreground">
         Únete a tu box
       </h1>
-      <p className="mb-8 text-sm text-neutral-500">
+      <p className="mb-8 text-sm text-muted">
         Ingresa el código de invitación que te dio tu coach.
       </p>
 
@@ -28,7 +31,7 @@ export default function OnboardingPage() {
         <div>
           <label
             htmlFor="codigo"
-            className="mb-1 block text-sm font-medium text-neutral-700"
+            className="mb-1.5 block text-sm font-medium text-neutral-300"
           >
             Código de invitación
           </label>
@@ -37,14 +40,14 @@ export default function OnboardingPage() {
             name="codigo"
             type="text"
             required
-            placeholder="Ej: DEMO2026"
+            placeholder="Ej: SCORPIONS"
             autoCapitalize="characters"
-            className="w-full rounded-lg border border-neutral-300 px-3 py-2.5 text-base uppercase text-neutral-900 focus:border-neutral-900 focus:outline-none"
+            className="w-full rounded-xl border border-border bg-surface px-3.5 py-3 text-base uppercase text-foreground outline-none transition-colors placeholder:normal-case placeholder:text-neutral-600 focus:border-accent"
           />
         </div>
 
         {state?.error && (
-          <p className="text-sm text-red-600" role="alert">
+          <p className="text-sm text-red-400" role="alert">
             {state.error}
           </p>
         )}
@@ -52,14 +55,14 @@ export default function OnboardingPage() {
         <button
           type="submit"
           disabled={pending}
-          className="mt-2 rounded-lg bg-neutral-900 px-4 py-2.5 text-base font-semibold text-white disabled:opacity-50"
+          className="mt-2 rounded-xl bg-accent px-4 py-3.5 text-base font-bold text-accent-foreground transition-opacity active:opacity-80 disabled:opacity-50"
         >
           {pending ? "Uniéndote…" : "Unirme al box"}
         </button>
       </form>
 
       <form action={logoutAction} className="mt-6 text-center">
-        <button type="submit" className="text-sm text-neutral-500 underline">
+        <button type="submit" className="text-sm text-muted underline">
           Cerrar sesión
         </button>
       </form>
