@@ -29,13 +29,7 @@ export default function ProgresoChart({ data }: { data: Punto[] }) {
           margin={{ top: 8, right: 8, bottom: 0, left: 8 }}
         >
           <CartesianGrid stroke="#2e2e2e" strokeDasharray="3 3" vertical={false} />
-          <XAxis
-            dataKey="label"
-            tick={{ fill: "#a3a3a3", fontSize: 11 }}
-            axisLine={{ stroke: "#2e2e2e" }}
-            tickLine={false}
-            minTickGap={24}
-          />
+          <XAxis dataKey="label" hide />
           <YAxis hide domain={["dataMin - 5", "dataMax + 5"]} />
           <Tooltip
             contentStyle={{

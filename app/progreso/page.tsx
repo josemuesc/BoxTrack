@@ -1,17 +1,19 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import ProgresoChart from "./progreso-chart";
+import MovementCard from "./movement-card";
 
 type Registro = {
   id: string;
   peso_kg: number;
   fecha: string;
   notas: string | null;
+  movimiento_id: string;
   movimiento: { nombre: string } | null;
 };
 
 type Grupo = {
+  movimientoId: string;
   nombre: string;
   registros: Registro[];
   pr: number;
@@ -30,7 +32,9 @@ export default async function ProgresoPage() {
 
   const { data, error } = await supabase
     .from("registros_rm")
-    .select("id, peso_kg, fecha, notas, movimiento:movimientos(nombre)")
+    .select(
+      "id, peso_kg, fecha, notas, movimiento_id, movimiento:movimientos(nombre)",
+    )
     .eq("usuario_id", user.id)
     .order("fecha", { ascending: true });
 
@@ -38,22 +42,24 @@ export default async function ProgresoPage() {
 
   const porMovimiento = registros.reduce<Record<string, Registro[]>>(
     (acc, r) => {
-      const nombre = r.movimiento?.nombre ?? "Otro";
-      acc[nombre] = acc[nombre] ?? [];
-      acc[nombre].push(r);
+      acc[r.movimiento_id] = acc[r.movimiento_id] ?? [];
+      acc[r.movimiento_id].push(r);
       return acc;
     },
     {},
   );
 
   const grupos: Grupo[] = Object.entries(porMovimiento)
-    .map(([nombre, registros]) => ({
-      nombre,
+    .map(([movimientoId, registros]) => ({
+      movimientoId,
+      nombre: registros[0].movimiento?.nombre ?? "Otro",
       registros,
       pr: Math.max(...registros.map((r) => r.peso_kg)),
       ultimaFecha: registros.at(-1)!.fecha,
     }))
     .sort((a, b) => (a.ultimaFecha < b.ultimaFecha ? 1 : -1));
+
+  const mesActual = new Date().toISOString().slice(0, 7);
 
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col px-6 py-8">
@@ -109,63 +115,16 @@ export default async function ProgresoPage() {
 
           <div className="flex flex-col gap-4">
             {grupos.map((grupo) => (
-              <section
-                key={grupo.nombre}
-                className="rounded-2xl border border-border bg-surface p-4"
-              >
-                <div className="mb-2 flex items-start justify-between">
-                  <h2 className="text-sm font-bold uppercase tracking-wide text-foreground">
-                    {grupo.nombre}
-                  </h2>
-                  <div className="text-right">
-                    <p className="text-lg font-black leading-none text-accent">
-                      {grupo.pr} kg
-                    </p>
-                    <p className="text-[11px] font-medium text-muted">
-                      PR actual
-                    </p>
-                  </div>
-                </div>
-
-                <ProgresoChart
-                  data={grupo.registros.map((r) => ({
-                    fecha: r.fecha,
-                    peso_kg: r.peso_kg,
-                  }))}
-                />
-
-                <ul className="mt-3 flex flex-col divide-y divide-border border-t border-border">
-                  {[...grupo.registros]
-                    .reverse()
-                    .slice(0, 3)
-                    .map((r) => (
-                      <li
-                        key={r.id}
-                        className="flex items-center justify-between gap-4 py-2.5"
-                      >
-                        <div>
-                          <p className="text-sm font-semibold text-foreground">
-                            {r.peso_kg} kg
-                          </p>
-                          <p className="text-xs text-muted">
-                            {new Date(
-                              `${r.fecha}T00:00:00`,
-                            ).toLocaleDateString("es-CO", {
-                              day: "2-digit",
-                              month: "short",
-                              year: "numeric",
-                            })}
-                          </p>
-                        </div>
-                        {r.notas && (
-                          <p className="max-w-[50%] text-right text-xs text-muted">
-                            {r.notas}
-                          </p>
-                        )}
-                      </li>
-                    ))}
-                </ul>
-              </section>
+              <MovementCard
+                key={grupo.movimientoId}
+                movimientoId={grupo.movimientoId}
+                nombre={grupo.nombre}
+                pr={grupo.pr}
+                chartData={grupo.registros
+                  .filter((r) => r.fecha.startsWith(mesActual))
+                  .map((r) => ({ fecha: r.fecha, peso_kg: r.peso_kg }))}
+                ultimos={[...grupo.registros].reverse().slice(0, 3)}
+              />
             ))}
           </div>
         </>
