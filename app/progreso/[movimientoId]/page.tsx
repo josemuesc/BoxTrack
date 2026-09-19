@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import MesFilter from "./mes-filter";
+import RangoFilter from "./rango-filter";
+import ProgresoChart from "../progreso-chart";
 
 type Registro = {
   id: string;
@@ -14,15 +15,24 @@ function capitalizar(texto: string) {
   return texto.charAt(0).toUpperCase() + texto.slice(1);
 }
 
+function etiquetaMes(ym: string) {
+  return capitalizar(
+    new Date(`${ym}-01T00:00:00`).toLocaleDateString("es-CO", {
+      month: "long",
+      year: "numeric",
+    }),
+  );
+}
+
 export default async function DetalleMovimientoPage({
   params,
   searchParams,
 }: {
   params: Promise<{ movimientoId: string }>;
-  searchParams: Promise<{ mes?: string }>;
+  searchParams: Promise<{ desde?: string; hasta?: string }>;
 }) {
   const { movimientoId } = await params;
-  const { mes } = await searchParams;
+  const { desde: desdeParam, hasta: hastaParam } = await searchParams;
 
   const supabase = await createClient();
   const {
@@ -48,32 +58,27 @@ export default async function DetalleMovimientoPage({
     .select("id, peso_kg, fecha, notas")
     .eq("usuario_id", user.id)
     .eq("movimiento_id", movimientoId)
-    .order("fecha", { ascending: false });
+    .order("fecha", { ascending: true });
 
-  const registros = (data ?? []) as Registro[];
+  const registrosAsc = (data ?? []) as Registro[];
 
-  const mesesMap = new Map<string, string>();
-  for (const r of registros) {
+  const mesesSet = new Set(registrosAsc.map((r) => r.fecha.slice(0, 7)));
+  const meses = Array.from(mesesSet)
+    .sort((a, b) => a.localeCompare(b))
+    .map((value) => ({ value, label: etiquetaMes(value) }));
+
+  const defaultDesde = meses[0]?.value ?? new Date().toISOString().slice(0, 7);
+  const defaultHasta =
+    meses.at(-1)?.value ?? new Date().toISOString().slice(0, 7);
+
+  const desde = desdeParam ?? defaultDesde;
+  const hasta = hastaParam ?? defaultHasta;
+
+  const registrosFiltradosAsc = registrosAsc.filter((r) => {
     const ym = r.fecha.slice(0, 7);
-    if (!mesesMap.has(ym)) {
-      mesesMap.set(
-        ym,
-        capitalizar(
-          new Date(`${ym}-01T00:00:00`).toLocaleDateString("es-CO", {
-            month: "long",
-            year: "numeric",
-          }),
-        ),
-      );
-    }
-  }
-  const meses = Array.from(mesesMap.entries())
-    .map(([value, label]) => ({ value, label }))
-    .sort((a, b) => b.value.localeCompare(a.value));
-
-  const registrosFiltrados = mes
-    ? registros.filter((r) => r.fecha.startsWith(mes))
-    : registros;
+    return ym >= desde && ym <= hasta;
+  });
+  const registrosFiltradosDesc = [...registrosFiltradosAsc].reverse();
 
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col px-6 py-8">
@@ -89,10 +94,12 @@ export default async function DetalleMovimientoPage({
         </h1>
       </div>
 
-      {meses.length > 0 && (
-        <div className="mb-4">
-          <MesFilter meses={meses} />
-        </div>
+      {meses.length > 1 && (
+        <RangoFilter
+          meses={meses}
+          defaultDesde={defaultDesde}
+          defaultHasta={defaultHasta}
+        />
       )}
 
       {error && (
@@ -103,20 +110,35 @@ export default async function DetalleMovimientoPage({
 
       {!error && (
         <>
+          <div className="mb-4 rounded-2xl border border-border bg-surface p-4">
+            {registrosFiltradosAsc.length > 0 ? (
+              <ProgresoChart
+                data={registrosFiltradosAsc.map((r) => ({
+                  fecha: r.fecha,
+                  peso_kg: r.peso_kg,
+                }))}
+              />
+            ) : (
+              <p className="py-8 text-center text-xs text-muted">
+                No hay registros en este rango.
+              </p>
+            )}
+          </div>
+
           <p className="mb-3 text-xs font-medium text-muted">
-            {registrosFiltrados.length}{" "}
-            {registrosFiltrados.length === 1 ? "registro" : "registros"}
+            {registrosFiltradosDesc.length}{" "}
+            {registrosFiltradosDesc.length === 1 ? "registro" : "registros"}
           </p>
 
-          {registrosFiltrados.length === 0 ? (
+          {registrosFiltradosDesc.length === 0 ? (
             <div className="rounded-2xl border border-border bg-surface px-6 py-10 text-center">
               <p className="text-sm text-muted">
-                No hay registros en este mes.
+                No hay registros en este rango.
               </p>
             </div>
           ) : (
             <ul className="flex flex-col divide-y divide-border rounded-2xl border border-border bg-surface px-4">
-              {registrosFiltrados.map((r) => (
+              {registrosFiltradosDesc.map((r) => (
                 <li
                   key={r.id}
                   className="flex items-center justify-between gap-4 py-3.5"
