@@ -214,16 +214,16 @@ begin
   end if;
 
   select * into v_box
-  from boxes
-  where codigo_invitacion = upper(trim(p_codigo));
+  from boxes b
+  where b.codigo_invitacion = upper(trim(p_codigo));
 
   if not found then
     raise exception 'Código de invitación inválido';
   end if;
 
   if exists (
-    select 1 from membresias
-    where usuario_id = auth.uid() and box_id = v_box.id
+    select 1 from membresias m
+    where m.usuario_id = auth.uid() and m.box_id = v_box.id
   ) then
     raise exception 'Ya eres miembro de este box';
   end if;
