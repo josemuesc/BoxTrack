@@ -32,6 +32,10 @@ export default async function DashboardPage() {
     redirect("/onboarding");
   }
 
+  if (membresia.rol === "coach") {
+    redirect("/coach");
+  }
+
   const box = membresia.box;
 
   const { count: totalRm } = await supabase

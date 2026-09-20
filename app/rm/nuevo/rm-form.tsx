@@ -23,6 +23,8 @@ export default function RmForm({
   );
   const [unidad, setUnidad] = useState<Unidad>("kg");
   const [pesoInput, setPesoInput] = useState("");
+  const [registrarPeso, setRegistrarPeso] = useState(false);
+  const [pesoCorporalInput, setPesoCorporalInput] = useState("");
 
   const pesoKg = useMemo(() => {
     const valor = Number(pesoInput);
@@ -31,10 +33,19 @@ export default function RmForm({
     return kg.toFixed(2);
   }, [pesoInput, unidad]);
 
+  const pesoCorporalKg = useMemo(() => {
+    if (!registrarPeso) return "";
+    const valor = Number(pesoCorporalInput);
+    if (!pesoCorporalInput || Number.isNaN(valor)) return "";
+    const kg = unidad === "lb" ? valor * LB_TO_KG : valor;
+    return kg.toFixed(2);
+  }, [registrarPeso, pesoCorporalInput, unidad]);
+
   return (
     <form action={formAction} className="flex flex-col gap-5">
       <input type="hidden" name="box_id" value={boxId} />
       <input type="hidden" name="peso_kg" value={pesoKg} />
+      <input type="hidden" name="peso_corporal_kg" value={pesoCorporalKg} />
 
       <div>
         <label
@@ -118,6 +129,38 @@ export default function RmForm({
           defaultValue={today}
           className="w-full rounded-xl border border-border bg-surface px-3.5 py-3 text-base text-foreground outline-none transition-colors focus:border-accent [color-scheme:dark]"
         />
+      </div>
+
+      <div className="rounded-xl border border-border bg-surface p-3.5">
+        <label className="flex items-center gap-2.5 text-sm font-medium text-neutral-300">
+          <input
+            type="checkbox"
+            checked={registrarPeso}
+            onChange={(e) => setRegistrarPeso(e.target.checked)}
+            className="h-4 w-4 rounded border-border accent-[#ff7a1a]"
+          />
+          Actualizar mi peso corporal de hoy
+        </label>
+
+        {registrarPeso && (
+          <div className="mt-3">
+            <input
+              type="number"
+              inputMode="decimal"
+              step="0.5"
+              min="0"
+              value={pesoCorporalInput}
+              onChange={(e) => setPesoCorporalInput(e.target.value)}
+              placeholder={unidad === "kg" ? "Ej: 78" : "Ej: 172"}
+              className="w-full rounded-xl border border-border bg-background px-3.5 py-3 text-base text-foreground outline-none transition-colors focus:border-accent"
+            />
+            {unidad === "lb" && pesoCorporalKg && (
+              <p className="mt-1.5 text-xs text-muted">
+                ≈ {pesoCorporalKg} kg
+              </p>
+            )}
+          </div>
+        )}
       </div>
 
       <div>

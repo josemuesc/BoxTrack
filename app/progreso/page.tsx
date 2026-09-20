@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import MovementCard from "./movement-card";
+import ProgresoChart from "./progreso-chart";
 
 type Registro = {
   id: string;
@@ -39,6 +40,14 @@ export default async function ProgresoPage() {
     .order("fecha", { ascending: true });
 
   const registros = (data ?? []) as unknown as Registro[];
+
+  const { data: pesos } = await supabase
+    .from("registros_peso")
+    .select("fecha, peso_kg")
+    .eq("usuario_id", user.id)
+    .order("fecha", { ascending: true });
+
+  const historialPeso = pesos ?? [];
 
   const porMovimiento = registros.reduce<Record<string, Registro[]>>(
     (acc, r) => {
@@ -112,6 +121,15 @@ export default async function ProgresoPage() {
               <p className="text-xs font-medium text-muted">Movimientos</p>
             </div>
           </div>
+
+          {historialPeso.length > 0 && (
+            <section className="mb-6 rounded-2xl border border-border bg-surface p-4">
+              <h2 className="mb-2 text-sm font-bold uppercase tracking-wide text-foreground">
+                Peso corporal
+              </h2>
+              <ProgresoChart data={historialPeso} />
+            </section>
+          )}
 
           <div className="flex flex-col gap-4">
             {grupos.map((grupo) => (

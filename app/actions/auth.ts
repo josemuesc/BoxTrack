@@ -78,7 +78,7 @@ export async function signUpAction(
     };
   }
 
-  redirect("/dashboard");
+  redirect("/");
 }
 
 export async function joinBoxAction(
@@ -98,7 +98,7 @@ export async function joinBoxAction(
     return { error: traducirErrorJoinBox(error.message) };
   }
 
-  redirect("/dashboard");
+  redirect("/");
 }
 
 export async function logoutAction() {
