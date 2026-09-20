@@ -40,6 +40,7 @@ export async function signUpAction(
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
   const codigo = String(formData.get("codigo") ?? "").trim();
+  const rol = parseRol(formData.get("rol"));
 
   if (!email || !password || !codigo) {
     return { error: "Completa correo, contraseña y código de invitación." };
@@ -69,6 +70,7 @@ export async function signUpAction(
 
   const { error: joinError } = await supabase.rpc("join_box", {
     p_codigo: codigo,
+    p_rol: rol,
   });
 
   if (joinError) {
@@ -86,13 +88,17 @@ export async function joinBoxAction(
   formData: FormData,
 ): Promise<AuthActionState> {
   const codigo = String(formData.get("codigo") ?? "").trim();
+  const rol = parseRol(formData.get("rol"));
 
   if (!codigo) {
     return { error: "Ingresa el código de invitación." };
   }
 
   const supabase = await createClient();
-  const { error } = await supabase.rpc("join_box", { p_codigo: codigo });
+  const { error } = await supabase.rpc("join_box", {
+    p_codigo: codigo,
+    p_rol: rol,
+  });
 
   if (error) {
     return { error: traducirErrorJoinBox(error.message) };
@@ -105,6 +111,10 @@ export async function logoutAction() {
   const supabase = await createClient();
   await supabase.auth.signOut();
   redirect("/login");
+}
+
+function parseRol(valor: FormDataEntryValue | null): "atleta" | "coach" {
+  return valor === "coach" ? "coach" : "atleta";
 }
 
 function traducirErrorSignUp(message: string) {
@@ -120,6 +130,9 @@ function traducirErrorJoinBox(message: string) {
   }
   if (message.includes("Ya eres miembro")) {
     return "Ya eres miembro de este box.";
+  }
+  if (message.includes("Rol inválido")) {
+    return "Selecciona un rol válido.";
   }
   return message;
 }

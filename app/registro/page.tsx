@@ -1,9 +1,11 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import Link from "next/link";
 import Logo from "@/components/logo";
 import { signUpAction, type AuthActionState } from "@/app/actions/auth";
+
+type Rol = "atleta" | "coach";
 
 const initialState: AuthActionState = {};
 
@@ -12,6 +14,7 @@ export default function RegistroPage() {
     signUpAction,
     initialState,
   );
+  const [rol, setRol] = useState<Rol>("atleta");
 
   if (state?.success) {
     return (
@@ -46,6 +49,40 @@ export default function RegistroPage() {
       </p>
 
       <form action={formAction} className="flex flex-col gap-4">
+        <input type="hidden" name="rol" value={rol} />
+
+        <div>
+          <span className="mb-1.5 block text-sm font-medium text-neutral-300">
+            Me estoy registrando como
+          </span>
+          <div className="flex rounded-xl border border-border bg-surface p-1">
+            {(
+              [
+                { value: "atleta", label: "Atleta" },
+                { value: "coach", label: "Coach" },
+              ] as const
+            ).map((opcion) => (
+              <button
+                key={opcion.value}
+                type="button"
+                onClick={() => setRol(opcion.value)}
+                className={`flex-1 rounded-lg py-2 text-sm font-bold transition-colors ${
+                  rol === opcion.value
+                    ? "bg-accent text-accent-foreground"
+                    : "text-muted"
+                }`}
+              >
+                {opcion.label}
+              </button>
+            ))}
+          </div>
+          {rol === "coach" && (
+            <p className="mt-1.5 text-xs text-muted">
+              Selecciona esto solo si tienes autorización de tu box.
+            </p>
+          )}
+        </div>
+
         <div>
           <label
             htmlFor="email"

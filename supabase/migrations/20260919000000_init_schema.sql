@@ -200,7 +200,7 @@ create policy "reacciones_delete_propias"
 -- Función para unirse a un box con código de invitación
 -- =========================================================
 
-create or replace function public.join_box(p_codigo text)
+create or replace function public.join_box(p_codigo text, p_rol text default 'atleta')
 returns table (box_id uuid, box_nombre text)
 language plpgsql
 security definer
@@ -208,9 +208,14 @@ set search_path = public
 as $$
 declare
   v_box boxes%rowtype;
+  v_rol text := lower(trim(p_rol));
 begin
   if auth.uid() is null then
     raise exception 'No autenticado';
+  end if;
+
+  if v_rol not in ('atleta', 'coach') then
+    raise exception 'Rol inválido';
   end if;
 
   select * into v_box
@@ -229,10 +234,10 @@ begin
   end if;
 
   insert into membresias (usuario_id, box_id, rol)
-  values (auth.uid(), v_box.id, 'atleta');
+  values (auth.uid(), v_box.id, v_rol);
 
   return query select v_box.id, v_box.nombre;
 end;
 $$;
 
-grant execute on function public.join_box(text) to authenticated;
+grant execute on function public.join_box(text, text) to authenticated;
