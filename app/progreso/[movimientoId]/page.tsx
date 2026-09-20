@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import RangoFilter from "./rango-filter";
+import PorcentajeCalculadora from "./porcentaje-calculadora";
 import ProgresoChart from "../progreso-chart";
 
 type Registro = {
@@ -74,6 +75,11 @@ export default async function DetalleMovimientoPage({
   const desde = desdeParam ?? defaultDesde;
   const hasta = hastaParam ?? defaultHasta;
 
+  const prKg =
+    registrosAsc.length > 0
+      ? Math.max(...registrosAsc.map((r) => r.peso_kg))
+      : 0;
+
   const registrosFiltradosAsc = registrosAsc.filter((r) => {
     const ym = r.fecha.slice(0, 7);
     return ym >= desde && ym <= hasta;
@@ -93,6 +99,8 @@ export default async function DetalleMovimientoPage({
           {movimiento.nombre}
         </h1>
       </div>
+
+      {prKg > 0 && <PorcentajeCalculadora prKg={prKg} />}
 
       {meses.length > 1 && (
         <RangoFilter
