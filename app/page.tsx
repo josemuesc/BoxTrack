@@ -11,12 +11,16 @@ export default async function Home() {
     redirect("/login");
   }
 
-  const { data: membresia } = await supabase
+  const { data: membresia, error: membresiaError } = await supabase
     .from("membresias")
     .select("rol")
     .eq("usuario_id", user.id)
     .limit(1)
     .maybeSingle();
+
+  if (membresiaError) {
+    console.error("Error consultando membresía:", membresiaError.message);
+  }
 
   if (!membresia) {
     redirect("/onboarding");

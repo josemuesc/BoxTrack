@@ -110,18 +110,31 @@ create policy "registros_peso_delete_propios"
 -- RLS adicional: dar visibilidad de box completo a los coaches
 -- =========================================================
 
+-- Función auxiliar SECURITY DEFINER: evita la recursión infinita que
+-- Postgres detecta cuando una política de "membresias" hace una
+-- subconsulta sobre la propia tabla "membresias".
+create or replace function public.es_coach_del_box(p_box_id uuid)
+returns boolean
+language sql
+security definer
+set search_path = public
+stable
+as $$
+  select exists (
+    select 1 from membresias
+    where usuario_id = auth.uid()
+      and rol = 'coach'
+      and box_id = p_box_id
+  );
+$$;
+
+grant execute on function public.es_coach_del_box(uuid) to authenticated;
+
 -- Un coach puede ver todas las membresías de su(s) box(es), no solo la suya.
 create policy "membresias_select_coach"
   on membresias for select
   to authenticated
-  using (
-    exists (
-      select 1 from membresias mc
-      where mc.usuario_id = auth.uid()
-        and mc.rol = 'coach'
-        and mc.box_id = membresias.box_id
-    )
-  );
+  using (public.es_coach_del_box(box_id));
 
 -- Un coach puede ver todos los RM registrados en su(s) box(es).
 create policy "registros_rm_select_coach"
