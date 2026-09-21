@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 import Link from "next/link";
 import Logo from "@/components/logo";
+import PasswordInput from "@/components/password-input";
 import { loginAction, type AuthActionState } from "@/app/actions/auth";
 
 const initialState: AuthActionState = {};
@@ -43,19 +44,25 @@ export default function LoginPage() {
         </div>
 
         <div>
-          <label
-            htmlFor="password"
-            className="mb-1.5 block text-sm font-medium text-neutral-300"
-          >
-            Contraseña
-          </label>
-          <input
+          <div className="mb-1.5 flex items-center justify-between">
+            <label
+              htmlFor="password"
+              className="block text-sm font-medium text-neutral-300"
+            >
+              Contraseña
+            </label>
+            <Link
+              href="/recuperar"
+              className="text-sm font-semibold text-accent"
+            >
+              ¿La olvidaste?
+            </Link>
+          </div>
+          <PasswordInput
             id="password"
             name="password"
-            type="password"
             required
             autoComplete="current-password"
-            className="w-full rounded-xl border border-border bg-surface px-3.5 py-3 text-base text-foreground outline-none transition-colors focus:border-accent"
           />
         </div>
 

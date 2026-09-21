@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getCoachBox } from "@/lib/coach";
 import { logoutAction } from "@/app/actions/auth";
 import Logo from "@/components/logo";
+import NotificacionesBanner from "@/components/notificaciones-banner";
 
 function haceDias(dias: number) {
   return new Date(Date.now() - dias * 24 * 60 * 60 * 1000)
@@ -24,6 +25,16 @@ export default async function CoachDashboardPage() {
   const coachBox = await getCoachBox(supabase, user.id);
   if (!coachBox) {
     redirect("/dashboard");
+  }
+
+  const { data: perfil } = await supabase
+    .from("perfiles")
+    .select("nombre")
+    .eq("usuario_id", user.id)
+    .maybeSingle();
+
+  if (!perfil?.nombre) {
+    redirect("/perfil/completar");
   }
 
   const { boxId, boxNombre } = coachBox;
@@ -109,6 +120,8 @@ export default async function CoachDashboardPage() {
         </form>
       </header>
 
+      <NotificacionesBanner />
+
       <div className="mb-8">
         <p className="text-sm font-medium text-accent">Panel de coach</p>
         <h1 className="mt-1 text-2xl font-black tracking-tight text-foreground">
@@ -160,6 +173,12 @@ export default async function CoachDashboardPage() {
           className="flex items-center justify-center gap-2 rounded-2xl border border-border bg-surface px-4 py-4 text-center text-base font-bold text-foreground"
         >
           🏆 Ranking por movimiento
+        </Link>
+        <Link
+          href="/logros"
+          className="flex items-center justify-center gap-2 rounded-2xl border border-border bg-surface px-4 py-4 text-center text-base font-bold text-foreground"
+        >
+          🎉 PRs del box
         </Link>
       </div>
 

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getCoachBox } from "@/lib/coach";
+import { fechaHoyBox } from "@/lib/fecha";
 import WodFotoForm from "@/components/wod-foto-form";
 
 export default async function CoachNuevaFotoWodPage() {
@@ -19,7 +20,7 @@ export default async function CoachNuevaFotoWodPage() {
     redirect("/dashboard");
   }
 
-  const hoy = new Date().toISOString().slice(0, 10);
+  const hoy = fechaHoyBox();
   const { data: wodOficial } = await supabase
     .from("wods")
     .select("id")

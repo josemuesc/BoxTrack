@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 
 export type AuthActionState = {
@@ -40,7 +41,6 @@ export async function signUpAction(
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
   const codigo = String(formData.get("codigo") ?? "").trim();
-  const rol = parseRol(formData.get("rol"));
 
   if (!email || !password || !codigo) {
     return { error: "Completa correo, contraseña y código de invitación." };
@@ -50,8 +50,15 @@ export async function signUpAction(
   }
 
   const supabase = await createClient();
+  const siteUrl = await getSiteUrl();
   const { data: signUpData, error: signUpError } = await supabase.auth.signUp(
-    { email, password },
+    {
+      email,
+      password,
+      options: {
+        emailRedirectTo: `${siteUrl}/auth/confirm?next=/onboarding`,
+      },
+    },
   );
 
   if (signUpError) {
@@ -59,18 +66,19 @@ export async function signUpAction(
   }
 
   // Si la confirmación de correo está activada en Supabase, todavía no
-  // hay sesión: no podemos ejecutar join_box (requiere auth.uid()).
+  // hay sesión: no podemos ejecutar join_box (requiere auth.uid()). El
+  // enlace del correo pasa por /auth/confirm, que sí abre sesión, así
+  // que aquí solo falta que la persona use su código de invitación.
   if (!signUpData.session) {
     return {
       success: true,
       message:
-        "Cuenta creada. Revisa tu correo para confirmar tu cuenta. Luego inicia sesión y usa el código de invitación para unirte a tu box.",
+        "Cuenta creada. Revisa tu correo y confirma tu cuenta: al hacerlo quedarás con sesión iniciada y solo tendrás que ingresar tu código de invitación.",
     };
   }
 
   const { error: joinError } = await supabase.rpc("join_box", {
     p_codigo: codigo,
-    p_rol: rol,
   });
 
   if (joinError) {
@@ -88,7 +96,6 @@ export async function joinBoxAction(
   formData: FormData,
 ): Promise<AuthActionState> {
   const codigo = String(formData.get("codigo") ?? "").trim();
-  const rol = parseRol(formData.get("rol"));
 
   if (!codigo) {
     return { error: "Ingresa el código de invitación." };
@@ -97,7 +104,6 @@ export async function joinBoxAction(
   const supabase = await createClient();
   const { error } = await supabase.rpc("join_box", {
     p_codigo: codigo,
-    p_rol: rol,
   });
 
   if (error) {
@@ -113,8 +119,76 @@ export async function logoutAction() {
   redirect("/login");
 }
 
-function parseRol(valor: FormDataEntryValue | null): "atleta" | "coach" {
-  return valor === "coach" ? "coach" : "atleta";
+export async function requestPasswordResetAction(
+  _prevState: AuthActionState,
+  formData: FormData,
+): Promise<AuthActionState> {
+  const email = String(formData.get("email") ?? "").trim();
+
+  if (!email) {
+    return { error: "Ingresa tu correo." };
+  }
+
+  const supabase = await createClient();
+  const siteUrl = await getSiteUrl();
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${siteUrl}/auth/confirm?next=/restablecer-password`,
+  });
+
+  if (error) {
+    return { error: "No pudimos enviar el correo. Intenta de nuevo." };
+  }
+
+  return {
+    success: true,
+    message:
+      "Si el correo está registrado, te enviamos un enlace para restablecer tu contraseña.",
+  };
+}
+
+export async function updatePasswordAction(
+  _prevState: AuthActionState,
+  formData: FormData,
+): Promise<AuthActionState> {
+  const password = String(formData.get("password") ?? "");
+
+  if (password.length < 6) {
+    return { error: "La contraseña debe tener al menos 6 caracteres." };
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return {
+      error: "El enlace expiró o ya se usó. Solicita uno nuevo.",
+    };
+  }
+
+  const { error } = await supabase.auth.updateUser({ password });
+
+  if (error) {
+    return { error: "No pudimos actualizar tu contraseña. Intenta de nuevo." };
+  }
+
+  redirect("/dashboard");
+}
+
+async function getSiteUrl() {
+  if (process.env.NEXT_PUBLIC_SITE_URL) {
+    return process.env.NEXT_PUBLIC_SITE_URL;
+  }
+  const headersList = await headers();
+  const origin = headersList.get("origin");
+  if (origin) {
+    return origin;
+  }
+  const host =
+    headersList.get("x-forwarded-host") ?? headersList.get("host");
+  const protocol = host?.startsWith("localhost") ? "http" : "https";
+  return `${protocol}://${host}`;
 }
 
 function traducirErrorSignUp(message: string) {

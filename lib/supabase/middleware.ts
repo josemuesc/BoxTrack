@@ -1,7 +1,12 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-const PUBLIC_PATHS = ["/login", "/registro"];
+const PUBLIC_PATHS = ["/login", "/registro", "/recuperar"];
+// /auth/confirm procesa el enlace del correo de recuperación: no debe
+// exigir sesión previa ni redirigir a /dashboard si ya hay una (por
+// ejemplo, si la persona pidió el reset estando logueada), o el
+// intercambio del código nunca llegaría a ejecutarse.
+const AUTH_CALLBACK_PATH = "/auth";
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
@@ -32,6 +37,11 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const path = request.nextUrl.pathname;
+
+  if (path.startsWith(AUTH_CALLBACK_PATH)) {
+    return supabaseResponse;
+  }
+
   const isPublicPath = PUBLIC_PATHS.some((p) => path.startsWith(p));
 
   if (!user && !isPublicPath && path !== "/") {

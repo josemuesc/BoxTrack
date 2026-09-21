@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { extraerWodDeImagen, type WodExtraido } from "@/lib/anthropic";
+import { enviarPushABox } from "@/lib/push";
 
 export type ExtraerWodResult = { data: WodExtraido } | { error: string };
 
@@ -93,6 +94,27 @@ export async function guardarWodAction(
 
   revalidatePath("/wod");
   revalidatePath("/coach/wod");
+
+  if (input.origen === "oficial_coach") {
+    // Best-effort: si el push falla no se bloquea el guardado del WOD,
+    // que ya quedó registrado correctamente. Se espera (await) porque en
+    // un entorno serverless una promesa sin await puede cancelarse antes
+    // de terminar cuando la función responde.
+    try {
+      await enviarPushABox(
+        input.boxId,
+        {
+          title: "🏋️ Nuevo WOD del día",
+          body: nombre,
+          url: "/wod",
+          tag: "wod-oficial",
+        },
+        user.id,
+      );
+    } catch {
+      // Ignorar: el WOD ya quedó guardado.
+    }
+  }
 
   return { wodId: nuevoWod.id as string };
 }

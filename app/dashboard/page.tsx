@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { logoutAction } from "@/app/actions/auth";
 import Logo from "@/components/logo";
+import NotificacionesBanner from "@/components/notificaciones-banner";
 
 type MembresiaConBox = {
   rol: string;
@@ -36,6 +37,16 @@ export default async function DashboardPage() {
     redirect("/coach");
   }
 
+  const { data: perfil } = await supabase
+    .from("perfiles")
+    .select("nombre")
+    .eq("usuario_id", user.id)
+    .maybeSingle();
+
+  if (!perfil?.nombre) {
+    redirect("/perfil/completar");
+  }
+
   const box = membresia.box;
 
   const { count: totalRm } = await supabase
@@ -62,6 +73,8 @@ export default async function DashboardPage() {
           </button>
         </form>
       </header>
+
+      <NotificacionesBanner />
 
       <section className="mb-6 overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-surface to-surface-2 p-6">
         <p className="text-sm font-medium text-accent">Tu box</p>
@@ -106,6 +119,12 @@ export default async function DashboardPage() {
           className="flex items-center justify-center gap-2 rounded-2xl border border-border bg-surface px-4 py-4 text-center text-base font-bold text-foreground transition-colors active:bg-surface-2"
         >
           📈 Ver mi rendimiento
+        </Link>
+        <Link
+          href="/logros"
+          className="flex items-center justify-center gap-2 rounded-2xl border border-border bg-surface px-4 py-4 text-center text-base font-bold text-foreground transition-colors active:bg-surface-2"
+        >
+          🎉 PRs del box
         </Link>
       </div>
     </main>

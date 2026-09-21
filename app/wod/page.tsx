@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { fechaHoyBox } from "@/lib/fecha";
 
 type Movimiento = {
   nombre: string;
@@ -50,7 +51,7 @@ export default async function WodPage() {
   }
 
   const boxId = membresia.box_id;
-  const hoy = new Date().toISOString().slice(0, 10);
+  const hoy = fechaHoyBox();
 
   const { data: wodOficial } = await supabase
     .from("wods")

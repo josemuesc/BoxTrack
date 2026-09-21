@@ -2,17 +2,17 @@
 
 import { useActionState } from "react";
 import Logo from "@/components/logo";
+import PasswordInput from "@/components/password-input";
 import {
-  joinBoxAction,
-  logoutAction,
+  updatePasswordAction,
   type AuthActionState,
 } from "@/app/actions/auth";
 
 const initialState: AuthActionState = {};
 
-export default function OnboardingPage() {
+export default function RestablecerPasswordPage() {
   const [state, formAction, pending] = useActionState(
-    joinBoxAction,
+    updatePasswordAction,
     initialState,
   );
 
@@ -21,33 +21,27 @@ export default function OnboardingPage() {
       <Logo className="mb-10" />
 
       <h1 className="mb-1 text-2xl font-bold text-foreground">
-        Únete a tu box
+        Elige una nueva contraseña
       </h1>
       <p className="mb-8 text-sm text-muted">
-        Ingresa el código de invitación que te dio tu coach.
+        Se usará la próxima vez que inicies sesión.
       </p>
 
       <form action={formAction} className="flex flex-col gap-4">
         <div>
           <label
-            htmlFor="codigo"
+            htmlFor="password"
             className="mb-1.5 block text-sm font-medium text-neutral-300"
           >
-            Código de invitación
+            Nueva contraseña
           </label>
-          <input
-            id="codigo"
-            name="codigo"
-            type="text"
+          <PasswordInput
+            id="password"
+            name="password"
             required
-            placeholder="Ej: SCORPIONS"
-            autoCapitalize="characters"
-            className="w-full rounded-xl border border-border bg-surface px-3.5 py-3 text-base uppercase text-foreground outline-none transition-colors placeholder:normal-case placeholder:text-neutral-600 focus:border-accent"
+            minLength={6}
+            autoComplete="new-password"
           />
-          <p className="mt-1.5 text-xs text-muted">
-            Tu rol se asigna según el código: usa el código de atleta o el
-            código de coach que te compartió tu box.
-          </p>
         </div>
 
         {state?.error && (
@@ -61,13 +55,7 @@ export default function OnboardingPage() {
           disabled={pending}
           className="mt-2 rounded-xl bg-accent px-4 py-3.5 text-base font-bold text-accent-foreground transition-opacity active:opacity-80 disabled:opacity-50"
         >
-          {pending ? "Uniéndote…" : "Unirme al box"}
-        </button>
-      </form>
-
-      <form action={logoutAction} className="mt-6 text-center">
-        <button type="submit" className="text-sm text-muted underline">
-          Cerrar sesión
+          {pending ? "Guardando…" : "Guardar contraseña"}
         </button>
       </form>
     </main>
