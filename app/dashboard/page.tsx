@@ -90,8 +90,14 @@ export default async function DashboardPage() {
 
       <div className="flex flex-col gap-3">
         <Link
-          href="/rm/nuevo"
+          href="/wod"
           className="flex items-center justify-center gap-2 rounded-2xl bg-accent px-4 py-4 text-center text-base font-bold text-accent-foreground shadow-lg shadow-accent/20 transition-transform active:scale-[0.98]"
+        >
+          🏋️ WOD de hoy
+        </Link>
+        <Link
+          href="/rm/nuevo"
+          className="flex items-center justify-center gap-2 rounded-2xl border border-border bg-surface px-4 py-4 text-center text-base font-bold text-foreground transition-colors active:bg-surface-2"
         >
           <span className="text-xl leading-none">+</span> Registrar nuevo RM
         </Link>

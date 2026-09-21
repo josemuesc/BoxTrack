@@ -142,10 +142,16 @@ export default async function CoachDashboardPage() {
         </div>
       </div>
 
-      <div className="mb-8 grid grid-cols-1 gap-3 sm:grid-cols-2">
+      <div className="mb-8 grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <Link
+          href="/coach/wod"
+          className="flex items-center justify-center gap-2 rounded-2xl bg-accent px-4 py-4 text-center text-base font-bold text-accent-foreground shadow-lg shadow-accent/20"
+        >
+          🏋️ WOD de hoy
+        </Link>
         <Link
           href="/coach/atletas"
-          className="flex items-center justify-center gap-2 rounded-2xl bg-accent px-4 py-4 text-center text-base font-bold text-accent-foreground shadow-lg shadow-accent/20"
+          className="flex items-center justify-center gap-2 rounded-2xl border border-border bg-surface px-4 py-4 text-center text-base font-bold text-foreground"
         >
           👥 Listado de atletas
         </Link>
